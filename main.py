@@ -64,9 +64,18 @@ def get_played_games_ids():
 
 
 def report(games):
+    df = create_df(games)
+  
+
+ 
+
+
+def create_df(games):
+
     con = sqlite3.connect("flashpoint.sqlite")
     cur = con.cursor()
     rows = []
+
     for game in games:
         print(game)
         row = cur.execute('SELECT * FROM game WHERE id = ?', (game,)).fetchall()[0]
@@ -74,10 +83,9 @@ def report(games):
    
     con.row_factory = sqlite3.Row
     columns = con.execute('SELECT * FROM game').fetchone().keys()
-
     df = pd.DataFrame(rows, columns=columns)
 
-    print(df)
+    return df
 
 
 if __name__ == "__main__":
