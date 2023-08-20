@@ -3,6 +3,9 @@ import os
 import sys
 import json
 import sqlite3
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -11,7 +14,7 @@ def main():
     if args.playlist:
         games = get_playlist_games_ids(args.playlist)
         report(games)
-        
+
     if args.playtime:
         games = get_played_games_ids()
         report(games)
@@ -61,7 +64,20 @@ def get_played_games_ids():
 
 
 def report(games):
-    print("HHEHHEHEH")
+    con = sqlite3.connect("flashpoint.sqlite")
+    cur = con.cursor()
+    rows = []
+    for game in games:
+        print(game)
+        row = cur.execute('SELECT * FROM game WHERE id = ?', (game,)).fetchall()[0]
+        rows.append(row)
+   
+    con.row_factory = sqlite3.Row
+    columns = con.execute('SELECT * FROM game').fetchone().keys()
+
+    df = pd.DataFrame(rows, columns=columns)
+
+    print(df)
 
 
 if __name__ == "__main__":
