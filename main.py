@@ -19,6 +19,8 @@ def main():
         games = get_played_games_ids()
         report(games)
 
+    print("Done.")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -65,7 +67,10 @@ def get_played_games_ids():
 
 def report(games):
     df = create_df(games)
-  
+    data = calculate(df)
+    write_data(data)
+    draw_plots(data)
+
 
  
 
@@ -86,6 +91,59 @@ def create_df(games):
     df = pd.DataFrame(rows, columns=columns)
 
     return df
+
+
+def calculate(df):
+    top_developers = df.loc[df.developer != '', "developer"].value_counts()[:10]
+    top_publishers = df.loc[df.publisher != '', "publisher"].value_counts()[:10]
+
+
+    data = {
+        "top_developers": top_developers,
+        "top_publishers": top_publishers
+    }
+
+
+def write_data(data):
+    print("W")
+
+
+def draw_plots(data):
+
+    top_developers = data["top_developers"]
+    sns.set(rc={"figure.figsize":(20,8.27)})
+    plot = sns.barplot(x = top_developers.values, y = top_developers.index, orient = "h").set(title = "Top ten developers distribution")
+    plt.tight_layout()
+    plt.savefig(f"report/plots/top_developers_bar_plot.png")
+    plt.figure(clear=True)
+
+    labels = top_developers.index
+    sizes = top_developers.values / top_developers.values.sum() * 100
+    plt.pie(sizes, textprops = {"color":"w"})
+    labels = [f"{l} - {s:0.1f}%" for l, s in zip(labels, sizes)]
+    plt.legend(labels = labels, bbox_to_anchor = (1.6,1), loc = "best")
+    plt.title("Top ten developers distribution")
+    plt.tight_layout()
+    plt.savefig(f"report/plots/top_developers_pie_chart.png")
+
+    plt.figure(clear=True)
+
+    top_publishers = data["top_publishers"]
+    plot = sns.barplot(x = top_publishers.values, y = top_publishers.index, orient = "h").set(title = "Top ten publishers distribution")
+    plt.tight_layout()
+    plt.savefig(f"report/plots/top_publishers_bar_plot.png")
+    plt.figure(clear=True)
+
+    labels = top_publishers.index
+    sizes = top_publishers.values / top_publishers.values.sum() * 100
+    plt.pie(sizes, textprops = {"color":"w"})
+    labels = [f"{l} - {s:0.1f}%" for l, s in zip(labels, sizes)]
+    plt.legend(labels = labels, bbox_to_anchor = (1.6,1), loc = "best")
+    plt.title("Top ten publishers distribution")
+    plt.tight_layout()
+    plt.savefig(f"report/plots/top_publishers_pie_chart.png")
+
+    plt.figure(clear=True)
 
 
 if __name__ == "__main__":
