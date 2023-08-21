@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
+    set_up()
     args = parse_arguments()
 
     if args.playlist:
@@ -20,6 +21,19 @@ def main():
         report(games)
 
     print("Done.")
+
+
+def set_up():
+
+    try:
+        os.makedirs(os.path.join(os.getcwd(), "report", "csv"))
+    except FileExistsError:
+        pass
+
+    try:
+        os.makedirs(os.path.join(os.getcwd(), "report", "plots"))
+    except FileExistsError:
+        pass
 
 
 def parse_arguments():
@@ -37,6 +51,8 @@ def get_playlist_games_ids(playlist):
     if not os.path.exists(playlist):
         sys.exit("Invalid filename.")
 
+    print("Getting data...")
+
     f = open(playlist) 
     playlist = json.load(f)
     f.close()
@@ -51,8 +67,10 @@ def get_playlist_games_ids(playlist):
 def get_played_games_ids():
 
     if not os.path.isfile("flashpoint.sqlite"):
-        print("Error: please provide the database file")
+        print("Error: please provide the database file.")
         sys.exit()
+    
+    print("Getting data...")
 
     con = sqlite3.connect("flashpoint.sqlite")
     cur = con.cursor()
@@ -94,54 +112,53 @@ def create_df(games):
 
 
 def calculate(df):
-    top_developers = df.loc[df.developer != '', "developer"].value_counts()[:10]
-    top_publishers = df.loc[df.publisher != '', "publisher"].value_counts()[:10]
+    
+    print("Calculating stats...")
 
+    developers = df.loc[df.developer != '', "developer"].value_counts()
+    publishers = df.loc[df.publisher != '', "publisher"].value_counts()
 
     data = {
-        "top_developers": top_developers,
-        "top_publishers": top_publishers
+        "developers": developers,
+        "publishers": publishers
     }
+
+    return data
 
 
 def write_data(data):
-    print("W")
+    print("Writing data in CSV format...")
+
+    
 
 
 def draw_plots(data):
 
-    top_developers = data["top_developers"]
+    print("Drawing plots...")
+
+    first_set = ["developers", "publishers", "platforms"]
+
+    for field in first_set:
+        create_bar_plot(data[f"{field}"].iloc[:10], f"top_{field}")
+
+
+
+def create_bar_plot(data, title):
+
     sns.set(rc={"figure.figsize":(20,8.27)})
-    plot = sns.barplot(x = top_developers.values, y = top_developers.index, orient = "h").set(title = "Top ten developers distribution")
+    plot = sns.barplot(x = data.values, y = data.index, orient = "h").set(title = title)
     plt.tight_layout()
-    plt.savefig(f"report/plots/top_developers_bar_plot.png")
+    plt.savefig(f"report/plots/{title}_bar_plot.png")
     plt.figure(clear=True)
 
-    labels = top_developers.index
-    sizes = top_developers.values / top_developers.values.sum() * 100
+    labels = data.index
+    sizes = data.values / data.values.sum() * 100
     plt.pie(sizes, textprops = {"color":"w"})
     labels = [f"{l} - {s:0.1f}%" for l, s in zip(labels, sizes)]
     plt.legend(labels = labels, bbox_to_anchor = (1.6,1), loc = "best")
-    plt.title("Top ten developers distribution")
+    plt.title(title)
     plt.tight_layout()
-    plt.savefig(f"report/plots/top_developers_pie_chart.png")
-
-    plt.figure(clear=True)
-
-    top_publishers = data["top_publishers"]
-    plot = sns.barplot(x = top_publishers.values, y = top_publishers.index, orient = "h").set(title = "Top ten publishers distribution")
-    plt.tight_layout()
-    plt.savefig(f"report/plots/top_publishers_bar_plot.png")
-    plt.figure(clear=True)
-
-    labels = top_publishers.index
-    sizes = top_publishers.values / top_publishers.values.sum() * 100
-    plt.pie(sizes, textprops = {"color":"w"})
-    labels = [f"{l} - {s:0.1f}%" for l, s in zip(labels, sizes)]
-    plt.legend(labels = labels, bbox_to_anchor = (1.6,1), loc = "best")
-    plt.title("Top ten publishers distribution")
-    plt.tight_layout()
-    plt.savefig(f"report/plots/top_publishers_pie_chart.png")
+    plt.savefig(f"report/plots/{title}_pie_chart.png")
 
     plt.figure(clear=True)
 
