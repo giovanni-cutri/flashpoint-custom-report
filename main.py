@@ -118,12 +118,14 @@ def calculate(df):
 
     developers = df.loc[df.developer != '', "developer"].value_counts()
     publishers = df.loc[df.publisher != '', "publisher"].value_counts()
+    platforms = df.loc[df.publisher != '', "platformName"].value_counts()
 
     dates = get_dates(df)
 
     data = {
         "developers": developers,
         "publishers": publishers,
+        "platforms": platforms,
         "dates": dates
     }
 
@@ -137,13 +139,11 @@ def get_dates(df):
     return df_dates
 
 
-
-
 def write_data(data):
     print("Writing data in CSV format...")
 
     for field in data:
-        data[field].to_csv(f"report/csv/{field}.csv", index=False, header=True)
+        data[field].to_csv(f"report/csv/{field}.csv", index=True, header=True)
 
 
 
