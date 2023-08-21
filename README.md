@@ -22,7 +22,7 @@ pip install -r requirements.txt
 -pt, --playtime                               get the report about all the games you have played in Flashpoint
 ```
 
-- If you choose the report for the playlist games, you will need to provide the playlist file by copying it inside the directory where the script is located.
+- If you choose the report for the games of a playlist, you will need to provide the playlist file by copying it inside the directory where the script is located.
     - You can export the playlist file from Flashpoint itself.
 - If you choose the report for the games that you have played, you will need to provide the *flashpoint.sqlite* file by copying it inside the directory where the script is located.
     - You can find the said file inside the *Data* folder in your Flashpoint local copy.
