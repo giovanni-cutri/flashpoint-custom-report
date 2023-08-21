@@ -6,6 +6,7 @@ import sqlite3
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from collections import Counter
 
 
 def main():
@@ -118,19 +119,31 @@ def calculate(df):
     developers = df.loc[df.developer != '', "developer"].value_counts()
     publishers = df.loc[df.publisher != '', "publisher"].value_counts()
 
+    dates = get_dates(df)
+
     data = {
         "developers": developers,
-        "publishers": publishers
+        "publishers": publishers,
+        "dates": dates
     }
 
     return data
+
+
+def get_dates(df):
+    df_dates = df.loc[(df.releaseDate != ""), ["title", "releaseDate", "platformName", "library"]].sort_values(by=["releaseDate"])
+    df_dates["releaseDate"] = pd.to_datetime(df_dates["releaseDate"], format="mixed").dt.strftime("%Y-%m-%d")     # year-only values get labeled with 1st January.
+    
+    return df_dates
+
+
 
 
 def write_data(data):
     print("Writing data in CSV format...")
 
     for field in data:
-        data[field].to_csv(f"report/csv/{field}.csv", index=True, header=True)
+        data[field].to_csv(f"report/csv/{field}.csv", index=False, header=True)
 
 
 
