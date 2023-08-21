@@ -7,6 +7,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from collections import Counter
+from itertools import islice
 
 
 def main():
@@ -101,7 +102,6 @@ def create_df(games):
     rows = []
 
     for game in games:
-        print(game)
         row = cur.execute('SELECT * FROM game WHERE id = ?', (game,)).fetchall()[0]
         rows.append(row)
    
@@ -119,14 +119,20 @@ def calculate(df):
     developers = df.loc[df.developer != '', "developer"].value_counts()
     publishers = df.loc[df.publisher != '', "publisher"].value_counts()
     platforms = df.loc[df.publisher != '', "platformName"].value_counts()
+    genres = df.loc[df["tagsStr"] != "", "tagsStr"].str.replace(",", ";").str.split("; ").explode().value_counts()
 
     dates = get_dates(df)
+    playtime = get_playtime(df)
+    year_platform = get_year_platform(dates)
 
     data = {
         "developers": developers,
         "publishers": publishers,
         "platforms": platforms,
-        "dates": dates
+        "genres": genres,
+        "dates": dates,
+        "playtime": playtime,
+        "year_platform": year_platform
     }
 
     return data
@@ -139,9 +145,24 @@ def get_dates(df):
     return df_dates
 
 
+def get_playtime(df):
+    df_playtime = df.loc[(df.releaseDate != ""), ["title", "playtime", "releaseDate", "platformName", "library"]].sort_values(by=["playtime"], ascending=False)
+    return df_playtime
+
+
+def get_year_platform(df_dates):
+
+    df_year_platform = df_dates.copy()
+    years = df_year_platform["releaseDate"].astype(str).str[:4]
+    df_year_platform[df_year_platform.columns[1]] = years.values
+    
+    return df_year_platform
+
+
 def write_data(data):
     print("Writing data in CSV format...")
 
+    data = dict(islice(data.items(), 6))
     for field in data:
         data[field].to_csv(f"report/csv/{field}.csv", index=True, header=True)
 
@@ -151,11 +172,13 @@ def draw_plots(data):
 
     print("Drawing plots...")
 
-    first_set = ["developers", "publishers", "platforms"]
+    first_set = ["developers", "publishers", "platforms", "genres"]
 
     for field in first_set:
         create_bar_plot(data[f"{field}"].iloc[:10], f"top_{field}")
-
+        create_pie_chart(data[f"{field}"].iloc[:10], f"top_{field}")
+    
+    create_stacked_bar_plot(data["year_platform"], "platform_distribution_by_year")
 
 
 def create_bar_plot(data, title):
@@ -164,7 +187,11 @@ def create_bar_plot(data, title):
     plot = sns.barplot(x = data.values, y = data.index, orient = "h").set(title = title)
     plt.tight_layout()
     plt.savefig(f"report/plots/{title}_bar_plot.png")
+
     plt.figure(clear=True)
+
+
+def create_pie_chart(data, title):
 
     labels = data.index
     sizes = data.values / data.values.sum() * 100
@@ -176,6 +203,11 @@ def create_bar_plot(data, title):
     plt.savefig(f"report/plots/{title}_pie_chart.png")
 
     plt.figure(clear=True)
+
+
+def create_stacked_bar_plot(data, title):
+    plot = data.groupby(["releaseDate", "platformName"]).size().unstack().plot(kind = 'bar', stacked = True)
+    plt.savefig(f"report/plots/{title}.png")
 
 
 if __name__ == "__main__":
