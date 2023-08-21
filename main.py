@@ -129,7 +129,9 @@ def calculate(df):
 def write_data(data):
     print("Writing data in CSV format...")
 
-    
+    for field in data:
+        data[field].to_csv(f"report/csv/{field}.csv", index=True, header=True)
+
 
 
 def draw_plots(data):
