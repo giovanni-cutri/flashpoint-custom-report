@@ -15,13 +15,13 @@ def main():
 
     if args.playlist:
         games = get_playlist_games_ids(args.playlist)
-        create_path(args.playlist.strip(".json"))
-        report(games, args.playlist.strip(".json"))
+        create_path(args.playlist.replace(".json", ""))
+        report(games, args.playlist.replace(".json", ""))
 
     if args.playtime:
         games = get_played_games_ids()
-        create_path("playtime")
-        report(games, "playtime")
+        create_path("played")
+        report(games, "played")
 
     print("Done.")
 
