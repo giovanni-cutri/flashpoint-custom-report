@@ -11,31 +11,19 @@ from itertools import islice
 
 
 def main():
-    set_up()
     args = parse_arguments()
 
     if args.playlist:
         games = get_playlist_games_ids(args.playlist)
-        report(games)
+        create_path(args.playlist.strip(".json"))
+        report(games, args.playlist.strip(".json"))
 
     if args.playtime:
         games = get_played_games_ids()
-        report(games)
+        create_path("playtime")
+        report(games, "playtime")
 
     print("Done.")
-
-
-def set_up():
-
-    try:
-        os.makedirs(os.path.join(os.getcwd(), "report", "csv"))
-    except FileExistsError:
-        pass
-
-    try:
-        os.makedirs(os.path.join(os.getcwd(), "report", "plots"))
-    except FileExistsError:
-        pass
 
 
 def parse_arguments():
@@ -85,14 +73,24 @@ def get_played_games_ids():
     return ids
 
 
-def report(games):
+def create_path(name):
+
+    try:
+        os.makedirs(os.path.join(os.getcwd(), "report", name, "csv"))
+    except FileExistsError:
+        pass
+
+    try:
+        os.makedirs(os.path.join(os.getcwd(), "report", name, "plots"))
+    except FileExistsError:
+        pass
+
+
+def report(games, name):
     df = create_df(games)
     data = calculate(df)
-    write_data(data)
-    draw_plots(data)
-
-
- 
+    write_data(data, name)
+    draw_plots(data, name)
 
 
 def create_df(games):
@@ -159,39 +157,38 @@ def get_year_platform(df_dates):
     return df_year_platform
 
 
-def write_data(data):
+def write_data(data, name):
     print("Writing data in CSV format...")
 
     data = dict(islice(data.items(), 6))
     for field in data:
-        data[field].to_csv(f"report/csv/{field}.csv", index=True, header=True)
+        data[field].to_csv(f"report/{name}/csv/{field}.csv", index=True, header=True)
 
 
-
-def draw_plots(data):
+def draw_plots(data, name):
 
     print("Drawing plots...")
 
     first_set = ["developers", "publishers", "platforms", "genres"]
 
     for field in first_set:
-        create_bar_plot(data[f"{field}"].iloc[:10], f"top_{field}")
-        create_pie_chart(data[f"{field}"].iloc[:10], f"top_{field}")
+        create_bar_plot(data[f"{field}"].iloc[:10], f"top_{field}", name)
+        create_pie_chart(data[f"{field}"].iloc[:10], f"top_{field}", name)
     
-    create_stacked_bar_plot(data["year_platform"], "platform_distribution_by_year")
+    create_stacked_bar_plot(data["year_platform"], "platform_distribution_by_year", name)
 
 
-def create_bar_plot(data, title):
+def create_bar_plot(data, title, name):
 
     sns.set(rc={"figure.figsize":(20,8.27)})
     plot = sns.barplot(x = data.values, y = data.index, orient = "h").set(title = title)
     plt.tight_layout()
-    plt.savefig(f"report/plots/{title}_bar_plot.png")
+    plt.savefig(f"report/{name}/plots/{title}_bar_plot.png")
 
     plt.figure(clear=True)
 
 
-def create_pie_chart(data, title):
+def create_pie_chart(data, title, name):
 
     labels = data.index
     sizes = data.values / data.values.sum() * 100
@@ -200,14 +197,14 @@ def create_pie_chart(data, title):
     plt.legend(labels = labels, bbox_to_anchor = (1.6,1), loc = "best")
     plt.title(title)
     plt.tight_layout()
-    plt.savefig(f"report/plots/{title}_pie_chart.png")
+    plt.savefig(f"report/{name}/plots/{title}_pie_chart.png")
 
     plt.figure(clear=True)
 
 
-def create_stacked_bar_plot(data, title):
+def create_stacked_bar_plot(data, title, name):
     plot = data.groupby(["releaseDate", "platformName"]).size().unstack().plot(kind = 'bar', stacked = True)
-    plt.savefig(f"report/plots/{title}.png")
+    plt.savefig(f"report/{name}/plots/{title}.png")
 
 
 if __name__ == "__main__":
