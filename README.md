@@ -1,7 +1,13 @@
 # flashpoint-custom-report
-Get a detailed report on the Flashpoint games included in a playlist or for those that you have played.
+Get a detailed report on the [Flashpoint](https://bluemaxima.org/flashpoint/) games included in a playlist or for those that you have played.
 
-The custom report consists in data in CSV format, bar plots and pie charts about developers, publishers, genres, platforms, release dates and playtime or the games.
+The custom report consists in data in CSV format, bar plots and pie charts about:
+- Developers
+- Publishers
+- Genres
+- Platforms
+- Release dates
+- Playtime
 
 ## Dependencies
 
